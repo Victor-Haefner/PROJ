@@ -124,20 +124,22 @@ include(policies)
 ################################################################################
 # Check for sqlite3
 ################################################################################
-find_program(EXE_SQLITE3 sqlite3)
-if(NOT EXE_SQLITE3)
-  message(SEND_ERROR "sqlite3 binary not found!")
-endif()
+if(NOT WITHOUT_SQLITE)
+	find_program(EXE_SQLITE3 sqlite3)
+	if(NOT EXE_SQLITE3)
+	  message(SEND_ERROR "sqlite3 binary not found!")
+	endif()
 
-find_package(Sqlite3 REQUIRED)
-if(NOT SQLITE3_FOUND)
-  message(SEND_ERROR "sqlite3 dependency not found!")
-endif()
+	find_package(Sqlite3 REQUIRED)
+	if(NOT SQLITE3_FOUND)
+	  message(SEND_ERROR "sqlite3 dependency not found!")
+	endif()
 
-# Would build and run with older versions, but with horrible performance
-# See https://github.com/OSGeo/PROJ/issues/1718
-if("${SQLITE3_VERSION}" VERSION_LESS "3.11")
-  message(SEND_ERROR "sqlite3 >= 3.11 required!")
+	# Would build and run with older versions, but with horrible performance
+	# See https://github.com/OSGeo/PROJ/issues/1718
+	if("${SQLITE3_VERSION}" VERSION_LESS "3.11")
+	  message(SEND_ERROR "sqlite3 >= 3.11 required!")
+	endif()
 endif()
 
 ################################################################################

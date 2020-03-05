@@ -41,7 +41,9 @@
 #include "proj/internal/internal.hpp"
 #include "proj/internal/lru_cache.hpp"
 #include "proj_internal.h"
+#ifndef __EMSCRIPTEN__
 #include "sqlite3_utils.hpp"
+#endif
 
 #ifdef __MINGW32__
 // mingw32-win32 doesn't implement std::mutex

@@ -45,7 +45,9 @@
 #include "proj/internal/lru_cache.hpp"
 #include "proj/internal/tracing.hpp"
 
+#ifndef __EMSCRIPTEN__
 #include "sqlite3_utils.hpp"
+#endif
 
 #include <cmath>
 #include <cstdlib>
@@ -57,6 +59,7 @@
 #include <memory>
 #include <sstream> // std::ostringstream
 #include <string>
+#include <iostream>
 
 #include "proj_constants.h"
 
@@ -67,11 +70,15 @@
 #include "proj_api.h"
 // clang-format on
 
+#ifndef __EMSCRIPTEN__
 #include <sqlite3.h>
+#endif
 
 // Custom SQLite VFS as our database is not supposed to be modified in
 // parallel. This is slightly faster
+#ifndef __EMSCRIPTEN__
 #define ENABLE_CUSTOM_LOCKLESS_VFS
+#endif
 
 using namespace NS_PROJ::internal;
 using namespace NS_PROJ::common;
@@ -125,6 +132,42 @@ using SQLResultSet = std::list<SQLRow>;
 using ListOfParams = std::list<SQLValues>;
 
 // ---------------------------------------------------------------------------
+
+#ifdef __EMSCRIPTEN__
+typedef int sqlite3;
+typedef int sqlite3_value;
+typedef int sqlite3_value_type;
+typedef int sqlite3_stmt;
+typedef int sqlite3_context;
+
+#define SQLITE_OPEN_READONLY 0
+#define SQLITE_OPEN_NOMUTEX 1
+#define SQLITE_TRANSIENT 2
+#define SQLITE_OK 3
+#define SQLITE_OPEN_READWRITE 4
+#define SQLITE_UTF8 5
+#define SQLITE_FLOAT 6
+#define SQLITE_ROW 7
+#define SQLITE_INTEGER 8
+#define SQLITE_DONE 8
+
+double sqlite3_value_double(sqlite3_value*) { return 0; }
+int sqlite3_value_int64(sqlite3_value*) { return 0; }
+void sqlite3_result_null(sqlite3_context*) {;}
+void sqlite3_result_int(sqlite3_context*, int) {;}
+void sqlite3_result_double(sqlite3_context*, double) {;}
+void sqlite3_reset(int*) {;}
+std::string sqlite3_errmsg(int*) { return ""; }
+void sqlite3_create_function(int*, std::string, int, int, int*, void (int *, int, int **), int*, int*) {;}
+int sqlite3_prepare_v2(int*, std::string, int, int**, int*) { return SQLITE_OK; }
+void sqlite3_bind_text(int*, int, std::string, int, int) {;}
+void sqlite3_bind_double(int*, int, double) {;}
+int sqlite3_column_count(int*) { return 0; }
+int sqlite3_step(int*) { return 0; }
+int sqlite3_column_type(int*, int) { return 0; }
+double sqlite3_column_double(int*, int) { return 0; }
+const char* sqlite3_column_text(int*, int) { return ""; }
+#endif
 
 struct DatabaseContext::Private {
     Private();
@@ -324,13 +367,17 @@ void DatabaseContext::Private::closeDB() noexcept {
         detach_ = false;
     }
 
+#ifndef __EMSCRIPTEN__
     for (auto &pair : mapSqlToStatement_) {
         sqlite3_finalize(pair.second);
     }
+#endif
     mapSqlToStatement_.clear();
 
     if (close_handle_ && sqlite_handle_ != nullptr) {
+#ifndef __EMSCRIPTEN__
         sqlite3_close(sqlite_handle_);
+#endif
         sqlite_handle_ = nullptr;
     }
 }
@@ -524,6 +571,7 @@ void DatabaseContext::Private::open(const std::string &databasePath,
     {
         vfsName = ctx->custom_sqlite3_vfs_name;
     }
+#ifndef __EMSCRIPTEN__
     if (sqlite3_open_v2(path.c_str(), &sqlite_handle_,
                         SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
                         vfsName.empty() ? nullptr : vfsName.c_str()) !=
@@ -531,6 +579,9 @@ void DatabaseContext::Private::open(const std::string &databasePath,
         !sqlite_handle_) {
         throw FactoryException("Open of " + path + " failed");
     }
+#else
+    std::cout << "PROJ DatabaseContext::Private::open, sqlite not available." << std::endl;
+#endif
 
     databasePath_ = path;
     registerFunctions();
@@ -587,6 +638,7 @@ void DatabaseContext::Private::attachExtraDatabases(
 
     closeDB();
 
+#ifndef __EMSCRIPTEN__
     sqlite3_open_v2(":memory:", &sqlite_handle_,
                     SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
 #ifdef SQLITE_OPEN_URI
@@ -644,6 +696,9 @@ void DatabaseContext::Private::attachExtraDatabases(
         }
         run(sql);
     }
+#else
+    std::cout << "PROJ DatabaseContext::Private::attachExtraDatabases, sqlite not available." << std::endl;
+#endif
 
     registerFunctions();
 }

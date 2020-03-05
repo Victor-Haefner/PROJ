@@ -34,7 +34,9 @@
 #include "proj_json_streaming_writer.hpp"
 
 #include <string.h>
+#ifndef __EMSCRIPTEN__
 #include <sqlite3.h>
+#endif
 #include <stdarg.h>
 #include <cmath>
 #define CPLAssert(x) do {} while(0)
@@ -44,13 +46,18 @@
 #define CPL_FRMT_GUIB "%llu"
 typedef std::uint64_t GUIntBig;
 
+
 static std::string CPLSPrintf(const char* fmt, ...)
 {
     std::string res;
     res.resize(256);
     va_list list;
     va_start(list, fmt);
+#ifndef __EMSCRIPTEN__
     sqlite3_vsnprintf(256, &res[0], fmt, list);
+#else
+    std::vsnprintf(&res[0], 256, fmt, list);
+#endif
     va_end(list);
     res.resize(strlen(&res[0]));
     return res;

@@ -45,7 +45,9 @@
 #include <sstream> // std::istringstream and std::ostringstream
 #include <string>
 
+#ifndef __EMSCRIPTEN__
 #include "sqlite3.h"
+#endif
 
 NS_PROJ_START
 
@@ -349,7 +351,11 @@ std::string toString(int val) {
     // with forcing the C locale. sqlite3_snprintf() emulates a C locale.
     constexpr int BUF_SIZE = 16;
     char szBuffer[BUF_SIZE];
+#ifndef __EMSCRIPTEN__
     sqlite3_snprintf(BUF_SIZE, szBuffer, "%d", val);
+#else
+    std::snprintf(szBuffer, BUF_SIZE, "%d", val);
+#endif
     return szBuffer;
 }
 
@@ -358,10 +364,17 @@ std::string toString(double val, int precision) {
     // with forcing the C locale. sqlite3_snprintf() emulates a C locale.
     constexpr int BUF_SIZE = 32;
     char szBuffer[BUF_SIZE];
+#ifndef __EMSCRIPTEN__
     sqlite3_snprintf(BUF_SIZE, szBuffer, "%.*g", precision, val);
     if (precision == 15 && strstr(szBuffer, "9999999999")) {
         sqlite3_snprintf(BUF_SIZE, szBuffer, "%.14g", val);
     }
+#else
+    std::snprintf(szBuffer, BUF_SIZE, "%.*g", precision, val);
+    if (precision == 15 && strstr(szBuffer, "9999999999")) {
+        std::snprintf(szBuffer, BUF_SIZE, "%.14g", val);
+    }
+#endif
     return szBuffer;
 }
 

@@ -264,11 +264,17 @@ set(SRC_LIBPROJ_CORE
   grids.cpp
   filemanager.hpp
   filemanager.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/proj_config.h
+)
+
+if(NOT WITHOUT_SQLITE)
+set(SRC_LIBPROJ_CORE
+  ${SRC_LIBPROJ_CORE}
   networkfilemanager.cpp
   sqlite3_utils.hpp
   sqlite3_utils.cpp
-  ${CMAKE_CURRENT_BINARY_DIR}/proj_config.h
 )
+endif()
 
 set(HEADERS_LIBPROJ
   proj_api.h
