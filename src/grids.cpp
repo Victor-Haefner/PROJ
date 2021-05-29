@@ -309,8 +309,12 @@ constexpr uint16 TIFFTAG_GEOTRANSMATRIX = 34264;
 constexpr uint16 TIFFTAG_GEOKEYDIRECTORY = 34735;
 constexpr uint16 TIFFTAG_GEODOUBLEPARAMS = 34736;
 constexpr uint16 TIFFTAG_GEOASCIIPARAMS = 34737;
+#ifndef TIFFTAG_GDAL_METADATA
 constexpr uint16 TIFFTAG_GDAL_METADATA = 42112;
+#endif
+#ifndef TIFFTAG_GDAL_NODATA
 constexpr uint16 TIFFTAG_GDAL_NODATA = 42113;
+#endif
 
 // ---------------------------------------------------------------------------
 
