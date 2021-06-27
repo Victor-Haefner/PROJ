@@ -1351,6 +1351,7 @@ static std::string pj_get_relative_share_proj_internal_no_check() {
 
 static std::string
 pj_get_relative_share_proj_internal_check_exists(PJ_CONTEXT *ctx) {
+#ifndef __EMSCRIPTEN__
     if (ctx == nullptr) {
         ctx = pj_get_default_ctx();
     }
@@ -1358,6 +1359,7 @@ pj_get_relative_share_proj_internal_check_exists(PJ_CONTEXT *ctx) {
     if (!path.empty() && NS_PROJ::FileManager::exists(ctx, path.c_str())) {
         return path;
     }
+#endif
     return std::string();
 }
 
